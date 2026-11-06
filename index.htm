@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NoCry Empire Tournament</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080c16;color:white;font-family:Arial}
+header{text-align:center;padding:28px;background:#111a2c;border-bottom:2px solid #c9a34b}
+header h1{color:#e4bd60;margin:0}
+header p{color:#aaa}
+main{max-width:850px;margin:25px auto;padding:15px}
+.card{background:#111a2c;border:1px solid #293752;border-radius:13px;padding:20px;margin-bottom:20px}
+h2{color:#e4bd60;font-size:21px}
+input,button{width:100%;padding:13px;border-radius:8px;margin:8px 0;font-size:15px}
+input{background:#080d19;color:white;border:1px solid #45516a}
+button{background:#d4ac50;color:#111;font-weight:bold;border:0;cursor:pointer}
+button.delete{background:#922d37;color:white}
+button.secondary{background:#293752;color:white}
+.player{background:#1d2a40;padding:13px;margin:9px 0;border-radius:8px}
+small{color:#aaa}
+.info{line-height:2;color:#ddd}
+footer{text-align:center;padding:25px;color:#888}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<header>
+<h1>NOCRY EMPIRE</h1>
+<p>OFFICIAL TOURNAMENT</p>
+</header>
+
+<main>
+
+<section class="card">
+<h2>🏆 معلومات البطولة</h2>
+<div class="info">
+<p>🎮 اللعبة: Free Fire</p>
+<p>📅 التاريخ: <span id="showDate">غير محدد</span></p>
+<p>🕒 الساعة: <span id="showTime">غير محددة</span></p>
+<p>👥 عدد اللاعبين: <span id="count">0</span></p>
+<p>📌 الحالة: <span id="showStatus">مفتوحة</span></p>
+</div>
+</section>
+
+<section class="card" id="login">
+<h2>🔐 دخول ADMIN</h2>
+<input id="password" type="password" placeholder="كلمة سر الإدارة">
+<button onclick="login()">دخول لوحة التحكم</button>
+<p id="loginError"></p>
+</section>
+
+<section class="card hidden" id="admin">
+<h2>⚙️ لوحة تحكم ADMIN</h2>
+
+<h3>إضافة لاعب</h3>
+<input id="playerName" placeholder="اسم اللاعب">
+<button onclick="addPlayer()">+ إضافة لاعب</button>
+
+<hr>
+
+<h3>تحديد موعد البطولة</h3>
+<label>التاريخ</label>
+<input type="date" id="date">
+
+<label>ساعة البداية</label>
+<input type="time" id="time">
+<button onclick="saveDate()">حفظ الموعد</button>
+
+<hr>
+
+<h3>حالة البطولة</h3>
+<button onclick="changeStatus()">تغيير حالة البطولة</button>
+
+<hr>
+
+<h3>إدارة اللاعبين</h3>
+<button class="delete" onclick="clearPlayers()">حذف جميع اللاعبين</button>
+<button class="secondary" onclick="logout()">تسجيل الخروج</button>
+</section>
+
+<section class="card">
+<h2>👥 قائمة اللاعبين</h2>
+<div id="playersList"></div>
+</section>
+
+</main>
+
+<footer>NOCRY EMPIRE © 2026</footer>
+
+<script>
+// غيّر كلمة السر قبل استعمال الموقع
+const ADMIN_PASSWORD = "NoCry2026";
+
+let players = [];
+let tournamentDate = "";
+let tournamentTime = "";
+let isOpen = true;
+
+function login(){
+ if(document.getElementById("password").value === ADMIN_PASSWORD){
+  document.getElementById("admin").classList.remove("hidden");
+  document.getElementById("login").classList.add("hidden");
+ }else{
+  document.getElementById("loginError").textContent="كلمة السر غير صحيحة!";
+ }
+}
+
+function logout(){
+ document.getElementById("admin").classList.add("hidden");
+ document.getElementById("login").classList.remove("hidden");
+ document.getElementById("password").value="";
+}
+
+function addPlayer(){
+ const input=document.getElementById("playerName");
+ const name=input.value.trim();
+ if(!name)return alert("اكتب اسم اللاعب");
+ if(!isOpen)return alert("البطولة مغلقة");
+ if(players.some(p=>p.toLowerCase()===name.toLowerCase()))
+ return alert("اللاعب مسجل من قبل");
+
+ players.push(name);
+ input.value="";
+ render();
+}
+
+function deletePlayer(index){
+ if(!confirm("هل تريد حذف هذا اللاعب؟"))return;
+ players.splice(index,1);
+ render();
+}
+
+function saveDate(){
+ tournamentDate=document.getElementById("date").value;
+ tournamentTime=document.getElementById("time").value;
+ updateInfo();
+ alert("تم حفظ موعد البطولة");
+}
+
+function changeStatus(){
+ isOpen=!isOpen;
+ updateInfo();
+ alert(isOpen?"تم فتح البطولة":"تم إغلاق البطولة");
+}
+
+function clearPlayers(){
+ if(!confirm("حذف جميع اللاعبين؟"))return;
+ players=[];
+ render();
+}
+
+function render(){
+ const list=document.getElementById("playersList");
+ document.getElementById("count").textContent=players.length;
+
+ if(players.length===0){
+  list.innerHTML="<p>لا يوجد لاعبون حتى الآن</p>";
+  return;
+ }
+
+ list.innerHTML=players.map((p,i)=>`
+ <div class="player">
+ <strong>${i+1}. ${escapeHTML(p)}</strong>
+ <button class="delete" onclick="deletePlayer(${i})">حذف اللاعب</button>
+ </div>
+ `).join("");
+}
+
+function escapeHTML(s){
+ return s.replace(/[&<>"']/g,c=>({
+ '&':'&amp;','<':'&lt;','>':'&gt;',
+ '"':'&quot;',"'":'&#39;'
+ })[c]);
+}
+
+function updateInfo(){
+ document.getElementById("showDate").textContent=
+ tournamentDate||"غير محدد";
+ document.getElementById("showTime").textContent=
+ tournamentTime||"غير محددة";
+ document.getElementById("showStatus").textContent=
+ isOpen?"مفتوحة":"مغلقة";
+}
+
+render();
+updateInfo();
+</script>
+</body>
+</html>
